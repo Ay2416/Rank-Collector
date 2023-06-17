@@ -25,7 +25,7 @@ This bot support English !
 * [Download Link](https://github.com/Ay2416/Rank-Collector/archive/refs/heads/main.zip)
 
 ## 注意
-* 
+* 初心者のコードです！ 自分の技術不足でとんでもないソースコードになっています...。
 
 ## 使い方（Discord上）
 下記のスラッシュコマンドを使用して使うことができます。
