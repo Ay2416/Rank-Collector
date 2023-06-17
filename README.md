@@ -1,1 +1,1 @@
-# Discord_MK8DX-Rank-Collector
+# MK8DX_Rank-Collector
