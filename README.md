@@ -10,9 +10,13 @@ This bot support English !
 ## Special Thanks!!
 ※敬称略
 
-*  → 
+* らぴす →　アイディアを頂き、アドバイスももらい作らせていただきました💦
 
-  Twitter：[https://twitter.com/](https://twitter.com/)
+  Twitter：[https://twitter.com/Icy_Lapislazuli](https://twitter.com/Icy_Lapislazuli)
+
+* 星尾ながる☄️⛈️ → 作る過程でアドバイスを頂きました！
+
+  Twitter：[https://twitter.com/Nagaru_ST7](https://twitter.com/Nagaru_ST7)
 
 ## 招待URL
 * [Invite](https://discord.com/api/oauth2/authorize?client_id=1115779746198999103&permissions=8&scope=applications.commands%20bot)
@@ -31,7 +35,9 @@ This bot support English !
 # ↓ここから先はプログラムについての話になります↓
 
 ## 動作確認済み環境
-* 
+* Ubuntu 20.04
+
+  python 3.10.11
 
 * Windows11
 
@@ -84,4 +90,16 @@ This bot support English !
   [https://github.com/Ay2416/Rank-Collector/blob/main/LICENSE](https://github.com/Ay2416/Rank-Collector/blob/main/LICENSE)
 
 ## 利用させていただいたライブラリ
-* 
+※名前がある部分は敬称略
+
+* Sheat / mk8dx.py
+  
+  Github：[https://github.com/sheat-git/mk8dx.py](https://github.com/sheat-git/mk8dx.py)
+
+  PyPI：[https://pypi.org/project/mk8dx/](https://pypi.org/project/mk8dx/)
+
+  Snyk Advisor：[https://snyk.io/advisor/python/mk8dx](https://snyk.io/advisor/python/mk8dx)
+
+* openpyxl 3.1.2
+
+  PyPI:[https://pypi.org/project/openpyxl/](https://pypi.org/project/openpyxl/)
