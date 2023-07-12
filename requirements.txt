@@ -3,3 +3,4 @@ ndjson
 python-dateutil
 python-dotenv
 mk8dx
+openpyxl
