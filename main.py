@@ -13,6 +13,8 @@ from mk8dx import Track
 import asyncio
 import math
 import shutil
+import openpyxl
+
 
 # Bot start
 
@@ -45,11 +47,6 @@ async def on_ready():
 
     await tree.sync()#スラッシュコマンドを同期
     print("グローバルコマンド同期完了！")
-
-
-    await tree.sync(guild=discord.Object(842412412460072964))
-    #await tree.sync(guild=discord.Object(1111441485204824114))
-    print("ギルドコマンド同期完了！")
 
     # guild_jsonフォルダがあるかの確認
     files = glob.glob('./*')
@@ -1085,7 +1082,7 @@ async def time_check():
                             with open('./guild_json/' + os.path.split(files[i])[1], 'a') as f:
                                 writer = ndjson.writer(f)
                                 writer.writerow(read_data[i])
-                    
+
                     if language == "ja":
                         embed=discord.Embed(title="10分間操作がなかったため処理を終了します！", description="また使い場合はコマンドを実行してください。", color=0x00008b)
                     elif language == "en":
@@ -1097,7 +1094,7 @@ async def time_check():
 #Bot commands
 # /add
 @tree.command(name="add",description="順位の記録の追加を開始・停止します。 / Rank data add mode change [start] and [stop].")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 @discord.app_commands.choices(mode=[discord.app_commands.Choice(name="start",value="start"),discord.app_commands.Choice(name="stop",value="stop")])
 async def add_command(interaction: discord.Interaction,mode:str):
     
@@ -1339,7 +1336,7 @@ async def add_command(interaction: discord.Interaction,mode:str):
   
 # /delete
 @tree.command(name="delete",description="順位の記録の削除を開始・停止します。 / Rank data delete mode change [start] and [stop]..")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 @discord.app_commands.choices(mode=[discord.app_commands.Choice(name="start",value="start"),discord.app_commands.Choice(name="stop",value="stop")])
 async def delete_command(interaction: discord.Interaction,mode:str):
 
@@ -1583,12 +1580,12 @@ async def delete_command(interaction: discord.Interaction,mode:str):
         
         await interaction.followup.send(embed=embed)
 
-# /list
-@tree.command(name="list",description="今までに入力された順位の平均順位をコースごとに表示します。 / Display all course average rank.")
-#@discord.app_commands.guilds(842412412460072964)
+# /list_avg
+@tree.command(name="list_avg",description="今までに入力された順位の平均順位をコースごとに表示します。 / Display all course average rank.")
+@discord.app_commands.guild_only()
 @discord.app_commands.choices(display_mode=[discord.app_commands.Choice(name="降順 / desc (12→1)",value="desc"),discord.app_commands.Choice(name="昇順 / asc (1→12)",value="asc")])
 @discord.app_commands.choices(season=[discord.app_commands.Choice(name="9",value="9")])
-async def list_command(interaction: discord.Interaction,display_mode:str,season:str = None):
+async def list_avg_command(interaction: discord.Interaction,display_mode:str,season:str = None):
     # 言語の確認
     file = str(interaction.guild.id) + ".ndjson"
 
@@ -1669,7 +1666,7 @@ async def list_command(interaction: discord.Interaction,display_mode:str,season:
                     course_name[j] = hozon_str
                 
     # display_modeがdescだった場合
-    else:
+    elif display_mode == "desc":
         # 小さい順に並び変える
         # （本来はdescは大きい順だが、マリオカートの順位の小さいから大きい順番は12→1のため反対の意味を表す）
         for i in range(0, len(average)):
@@ -1709,10 +1706,13 @@ async def list_command(interaction: discord.Interaction,display_mode:str,season:
             #表示させる
             await interaction.followup.send(embed=embed)
             embed=discord.Embed(title="", color=0x00008b)
+            
+            # DiscordのWebhook送信制限に引っかからないための対策　※効果があるかは不明
+            await asyncio.sleep(2)
 
 # /average
 @tree.command(name="average",description="入力されたコースの平均順位を表示します。 / Typing course display average rank.")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 @discord.app_commands.choices(season=[discord.app_commands.Choice(name="9",value="9")])
 async def average_command(interaction: discord.Interaction,course:str,last:int,season:str = None):
 
@@ -1829,9 +1829,12 @@ async def average_command(interaction: discord.Interaction,course:str,last:int,s
             await interaction.followup.send(embed=embed)
             embed=discord.Embed(title="", color=0x00008b)
 
+            # DiscordのWebhook送信制限に引っかからないための対策　※効果があるかは不明
+            await asyncio.sleep(2)
+
 # /stage
 @tree.command(name="stage",description="入力されたコースの呼び方を全て表示します。 / Typing course display all nickname.")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 async def stage_command(interaction: discord.Interaction,course:str):
     # 言語の確認
     file = str(interaction.guild.id) + ".ndjson"
@@ -1887,7 +1890,7 @@ async def stage_command(interaction: discord.Interaction,course:str):
 
 # /backup
 @tree.command(name="backup",description="データをバックアップします / Backup data.")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 async def backup_command(interaction: discord.Interaction):
 
     await interaction.response.defer(ephemeral=True)
@@ -1936,7 +1939,7 @@ async def backup_command(interaction: discord.Interaction):
 
 # /restore
 @tree.command(name="restore",description="データを復元します。 / Restore data.")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 async def restore_command(interaction: discord.Interaction):
     # 言語の確認
     file = str(interaction.guild.id) + ".ndjson"
@@ -1951,11 +1954,217 @@ async def restore_command(interaction: discord.Interaction):
     elif language == "en":
         await interaction.response.send_message("It has not yet been implemented from an virus perspective.\nOur apologies. \nIf you would like to restore your backed up files,\nplease contact us at the /support command location.",ephemeral=True)
 
+# /export
+@tree.command(name="export",description="指定されたシーズンの保存されているデータを指定された形式で出力します。 / Typing season data export various file format.")
+@discord.app_commands.guild_only()
+@discord.app_commands.choices(file_format=[discord.app_commands.Choice(name="Excel",value="Excel"),discord.app_commands.Choice(name="PDF",value="PDF"),
+                                           discord.app_commands.Choice(name="jpg",value="jpg")])
+@discord.app_commands.choices(season=[discord.app_commands.Choice(name="9",value="9")])
+async def exoprt_command(interaction: discord.Interaction,file_format:str,season:str = None):
+
+    await interaction.response.defer(ephemeral=True)
+
+    # 言語の確認
+    file = str(interaction.guild.id) + ".ndjson"
+
+    with open('./language_json/' + file) as f:
+        read_data = ndjson.load(f)
+
+    language = read_data[0]["language_mode"]
+
+    # seasonの指定がない場合は最新のシーズンの物を表示する
+    if season == None:
+        season = now_season
+    
+    # user_jsonにデータがあるかの確認
+    files = glob.glob('./user_json/*')
+    judge = 0
+
+    for i in range(0, len(files)):
+        #print(os.path.split(files[i])[1])
+        if os.path.split(files[i])[1] == str(interaction.user.id):
+            judge = 1
+            break 
+    
+    if judge == 0:
+        if language == "ja":
+            embed=discord.Embed(title="あなたのデータがありません！", description="データを入力してからお試しください。", color=0xff0000)
+        elif language == "en":
+            embed=discord.Embed(title="We do not have your data!", description="Please try it after entering your data.", color=0xff0000)    
+        await interaction.followup.send(embed=embed)
+        return
+       
+    # 指定されたファイル形式によって処理を分ける
+    if file_format == "Excel":
+        # ベースファイルをコピー
+        shutil.copyfile("base.xlsx", str(interaction.user.id) + ".xlsx")
+
+        # データを入れる
+        book = openpyxl.load_workbook('./' + str(interaction.user.id) + '.xlsx')
+        sheet = book['Record Write']
+
+        # 名前、シーズン数、時間の挿入
+        sheet.cell(row=2, column=3).value = str(interaction.user.name)
+        sheet.cell(row=3, column=3).value = season
+
+        if language == "ja":
+            date = dateutil.parser.parse(str(datetime.datetime.now())).astimezone(JST)
+            sheet.cell(row=4, column=3).value = date.strftime("%Y/%m/%d %H:%M:%S") + " JST"
+        elif language == "en":
+            date = dateutil.parser.parse(str(datetime.datetime.now())).astimezone(UTC)
+            sheet.cell(row=4, column=3).value = date.strftime("%Y/%m/%d %H:%M:%S") + " UTC"
+        
+        for i in range(0, 96):
+            # セルからコースの略称を取得
+            # 正式名称を入れていく
+            if sheet.cell(row=7, column=4+i).value == None:
+                sheet.cell(row=8, column=4+i).value = "No data."
+            else:
+                course = sheet.cell(row=7, column=4+i).value
+                #print(course)
+                name = Track.from_nick(course)
+
+                if language == "ja":
+                    sheet.cell(row=8, column=4+i).value = name.full_name_ja
+                elif language == "en":
+                    sheet.cell(row=8, column=4+i).value = name.full_name
+        
+        # コースデータにあった順位データを入れていく
+        for i in range(0, 96):
+
+            if sheet.cell(row=7, column=4+i).value == None:
+                continue
+            else:
+                course = sheet.cell(row=7, column=4+i).value
+                #print(course)
+                name = Track.from_nick(course)
+                #print(name.abbr)
+                # コースデータがあるかの確認
+                files = glob.glob('./user_json/' + str(interaction.user.id)  + '/' + str(season) + "/*.ndjson")
+                judge = 0
+
+                for j in range(0, len(files)):
+                    #print(os.path.split(files[i])[1])
+                    if(os.path.split(files[j])[1] == name.abbr + ".ndjson"):
+                        judge = 1
+                        break
+                
+                if judge == 1:
+                    #コースデータの読込
+                    with open('./user_json/' + str(interaction.user.id)  + '/' + str(season) + '/' + name.abbr + ".ndjson") as f:
+                        read_data = ndjson.load(f)
+
+                    for k in range(0, len(read_data)):
+                        sheet.cell(row=9+k, column=4+i).value = read_data[k]["rank"]
+                        #print(sheet.cell(row=9+k, column=4+i).value)
+
+        #　保存を行う
+        book.save('./' + str(interaction.user.id) + '.xlsx')
+
+        # Discord上に送信
+        if language == "ja":
+            embed=discord.Embed(title="データの出力に成功しました！", description="何かのお役に立てると幸いです！", color=0x00ff40)
+        elif language == "en":
+            embed=discord.Embed(title="Data output succeeded!", description="I hope I can be of some help!", color=0x00ff40)
+        
+        await interaction.followup.send(embed=embed,file=discord.File('./' + str(interaction.user.id) + '.xlsx'))
+        
+        # xlsxファイルの削除
+        os.remove('./' + str(interaction.user.id) + '.xlsx')
+    # PDFが指定された場合　※エクセルシートをPDFに変換して行う
+    elif file_format == "PDF":
+        await interaction.followup.send("まだ実装されていません！")
+        '''
+        # ベースファイルをコピー
+        shutil.copyfile("base.xlsx", str(interaction.user.id) + ".xlsx")
+
+        # データを入れる
+        book = openpyxl.load_workbook('./' + str(interaction.user.id) + '.xlsx')
+        sheet = book['Record Write']
+
+        # 名前、シーズン数、時間の挿入
+        sheet.cell(row=2, column=3).value = str(interaction.user.name)
+        sheet.cell(row=3, column=3).value = season
+
+        if language == "ja":
+            date = dateutil.parser.parse(str(datetime.datetime.now())).astimezone(JST)
+            sheet.cell(row=4, column=3).value = date.strftime("%Y/%m/%d %H:%M:%S") + " JST"
+        elif language == "en":
+            date = dateutil.parser.parse(str(datetime.datetime.now())).astimezone(UTC)
+            sheet.cell(row=4, column=3).value = date.strftime("%Y/%m/%d %H:%M:%S") + " UTC"
+        
+        for i in range(0, 96):
+            # セルからコースの略称を取得
+            # 正式名称を入れていく
+            if sheet.cell(row=7, column=4+i).value == None:
+                sheet.cell(row=8, column=4+i).value = "No data."
+            else:
+                course = sheet.cell(row=7, column=4+i).value
+                #print(course)
+                name = Track.from_nick(course)
+
+                if language == "ja":
+                    sheet.cell(row=8, column=4+i).value = name.full_name_ja
+                elif language == "en":
+                    sheet.cell(row=8, column=4+i).value = name.full_name
+        
+        # コースデータにあった順位データを入れていく
+        for i in range(0, 96):
+
+            if sheet.cell(row=7, column=4+i).value == None:
+                continue
+            else:
+                course = sheet.cell(row=7, column=4+i).value
+                #print(course)
+                name = Track.from_nick(course)
+                #print(name.abbr)
+                # コースデータがあるかの確認
+                files = glob.glob('./user_json/' + str(interaction.user.id)  + '/' + str(season) + "/*.ndjson")
+                judge = 0
+
+                for j in range(0, len(files)):
+                    #print(os.path.split(files[i])[1])
+                    if(os.path.split(files[j])[1] == name.abbr + ".ndjson"):
+                        judge = 1
+                        break
+                
+                if judge == 1:
+                    #コースデータの読込
+                    with open('./user_json/' + str(interaction.user.id)  + '/' + str(season) + '/' + name.abbr + ".ndjson") as f:
+                        read_data = ndjson.load(f)
+
+                    for k in range(0, len(read_data)):
+                        sheet.cell(row=9+k, column=4+i).value = read_data[k]["rank"]
+                        #print(sheet.cell(row=9+k, column=4+i).value)
+
+        # 保存を行う
+        book.save('./' + str(interaction.user.id) + '.xlsx')
+
+        # excelファイルをpdfファイルへ
+
+        # Discord上に送信
+        if language == "ja":
+            embed=discord.Embed(title="データの出力に成功しました！", description="何かのお役に立てると幸いです！", color=0x00ff40)
+        elif language == "en":
+            embed=discord.Embed(title="Data output succeeded!", description="I hope I can be of some help!", color=0x00ff40)
+        
+        await interaction.followup.send(embed=embed,file=discord.File('./' + str(interaction.user.id) + '.pdf'))
+        
+        # xlsx, pdfファイルの削除
+        os.remove('./' + str(interaction.user.id) + '.xlsx')
+        os.remove('./' + str(interaction.user.id) + '.pdf')
+        '''
+    # jpgだった場合
+    elif file_format == "jpg":
+        await interaction.followup.send("まだ実装されていません！")
+    #await interaction.response.send_message("コマンドがまだ実装されていません！",ephemeral=False)
+
 # /language
 @tree.command(name="language",description="言語を変更します。（jaまたはen） / Change language. (ja or en)")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 @discord.app_commands.choices(language=[discord.app_commands.Choice(name="ja",value="ja"),discord.app_commands.Choice(name="en",value="en")])
 async def language_command(interaction: discord.Interaction,language:str):
+
     # 言語の確認
     file = str(interaction.guild.id) + ".ndjson"
 
@@ -2015,7 +2224,7 @@ async def language_command(interaction: discord.Interaction,language:str):
 
 # /help
 @tree.command(name="help",description="コマンドについての簡単な使い方を出します。 / How to use command and Command list.")
-#@discord.app_commands.guilds(842412412460072964)
+@discord.app_commands.guild_only()
 async def help_command(interaction: discord.Interaction):
     # 言語の確認
     file = str(interaction.guild.id) + ".ndjson"
@@ -2031,22 +2240,24 @@ async def help_command(interaction: discord.Interaction):
         embed=discord.Embed(title="コマンドリスト")
         embed.add_field(name="/add mode:[start / stop]", value="順位の記録の追加を開始・停止します。\n※10分間操作がなければ自動で停止します。", inline=False)
         embed.add_field(name="/delete mode:[start / stop]", value="順位の記録の削除を開始・停止します。\n※10分間操作がなければ自動で停止します。", inline=False)
-        embed.add_field(name="/list display_mode:[降順(12→1) / 昇順(1→12)] season:[シーズン数]", value="登録されている全てのコースの平均順位を表示します。\n※「season」の指定がなければ、最新のシーズンの保存してある記録を表示します。", inline=False)
+        embed.add_field(name="/list_avg display_mode:[降順(12→1) / 昇順(1→12)] season:[シーズン数]", value="登録されている全てのコースの平均順位を表示します。\n※「season」の指定がなければ、最新のシーズンの保存してある記録を表示します。", inline=False)
         embed.add_field(name="/average course:[コース名] last:[直近何回分を表示するか] season:[シーズン数]", value="指定されたコースの平均順位を表示します。\n※「last」は過去の記録を表示する数です。\n※「season」の指定がなければ、最新のシーズンの保存してある記録を表示します。", inline=False)
         embed.add_field(name="/stage course:[コース名]", value="入力されたコースの呼び名を全て表示します。（登録されているもののみ）", inline=False)
         embed.add_field(name="/backup", value="このBotに保存されている順位データをバックアップし、ダウンロードをできるようにします。", inline=False)
         embed.add_field(name="/restore", value="順位データを復元します。\n※このコマンドはまだ実装できていません。\n復元を希望の場合は、/supportコマンドの場所までご連絡をください。", inline=False)
+        embed.add_field(name="/export file_format:[エクスポートする形式]", value="このBotに保存されている順位データを指定の形式にエクスポートします。", inline=False)
         embed.add_field(name="/language language:[言語の選択（ja/en）]", value="このBotのコマンドの言語を変更します。", inline=False)
         embed.add_field(name="/help", value="このBotのコマンドの簡単な使い方を出します。", inline=False)
     elif language == "en":
         embed=discord.Embed(title="Command list")
         embed.add_field(name="/add mode:[start / stop]", value="Starts and stops the addition of rank records.\n*If there is no operation for 10 minutes, it will automatically stop.", inline=False)
         embed.add_field(name="/delete mode:[start / stop]", value="Starts and stops the deletion of rank records.\n*If there is no operation for 10 minutes, it will automatically stop.", inline=False)
-        embed.add_field(name="/list display_mode:[desc(12→1) / asc(1→12)] season:[season num]", value="Displays the average ranking of all registered courses.\n*If [season] is not specified, the stored records for the most recent season are displayed.", inline=False)
+        embed.add_field(name="/list_avg display_mode:[desc(12→1) / asc(1→12)] season:[season num]", value="Displays the average ranking of all registered courses.\n*If [season] is not specified, the stored records for the most recent season are displayed.", inline=False)
         embed.add_field(name="/average course:[course name] last:[last records display num] season:[season num]", value="Displays the average ranking for a given course.\n*[Last] is the number of past records to be displayed.\n*If [season] is not specified, the stored records for the most recent season are displayed.", inline=False)
         embed.add_field(name="/stage course:[course name]", value="Displays all course call names entered. (Only those that have been registered)", inline=False)
         embed.add_field(name="/backup", value="Backup the ranking data stored in this bot and make it available for download.", inline=False)
         embed.add_field(name="/restore", value="Restore rank data. \n*This command has not yet been implemented.\nIf you wish to restore, please contact us at the /support command location.", inline=False)
+        embed.add_field(name="/export file_format:[export format]", value="Export the ranking data stored in this bot to the specified format.", inline=False)
         embed.add_field(name="/language language:[choose language（ja/en）]", value="Change default language.", inline=False)
         embed.add_field(name="/help", value="How to use command and Command list.", inline=False)
     '''
